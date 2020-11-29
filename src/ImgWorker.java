@@ -67,6 +67,10 @@ public class ImgWorker {
         }
     }
 
+    /**
+     * Метод сохранения изображения и вывод ответа
+     * @param solve передаем итоговое решение, рисуем круги на изначальной карте, выводим прибыль от установки вышек
+     */
     public void saveImage(Solve solve) {
         if (getStatus() == 0) {
             System.out.println("Невозможно сохранить не открытый файл");
@@ -85,6 +89,7 @@ public class ImgWorker {
             File outputFile = new File("img/" + outputName);
             ImageIO.write(image, "png", outputFile);
             System.out.println("Изображение было сохранено");
+            System.out.println("Прибыль от самого лучшего решения, которое мы смогли найти - " + solve.getEvaluation() + " у.е.");
         } catch (IOException e) {
             System.out.println("Не удалось сохранить изображение");
         }

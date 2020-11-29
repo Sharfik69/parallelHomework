@@ -5,6 +5,7 @@ public class Solve {
 
     private ArrayList <Point> points;
     private int [][] brightnessMatrix;
+    private int [][] prefixMatrix;
     private static final int RADIUS = 50, TOWER_PRICE = 5000000;
 
     class Point {
@@ -45,7 +46,16 @@ public class Solve {
         for (int i = 0; i < n; i++) {
             int y = rnd.nextInt(brightnessMatrix.length), x = rnd.nextInt(brightnessMatrix[0].length);
             points.add(new Point(x, y));
-            System.out.println(x + " " + y);
+        }
+    }
+
+    public void generateSmartSolve() {
+        prefixMatrix = new int[brightnessMatrix.length + 1][brightnessMatrix[0].length + 1];
+        //TODO: Сделать умное рандомное решение через матрицу сумм
+        for (int i = 0; i < brightnessMatrix.length; i++) {
+            for (int j = 0 ; j < brightnessMatrix[0].length; j++) {
+
+            }
         }
     }
 
