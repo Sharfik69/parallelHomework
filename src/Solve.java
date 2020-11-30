@@ -1,5 +1,4 @@
-import java.util.ArrayList;
-import java.util.Random;
+import java.util.*;
 
 public class Solve {
 
@@ -37,6 +36,12 @@ public class Solve {
         this.brightnessMatrix = brightnessMatrix;
     }
 
+    Solve (List <Point> points) {
+        this.points = new ArrayList<>();
+        this.points.addAll(points);
+        this.brightnessMatrix = ImgWorker.brightness;
+    }
+
     /**
      * Генерирует случайное покрытие точек
      */
@@ -44,7 +49,7 @@ public class Solve {
         Random rnd = new Random();
         int n = rnd.nextInt(35) + 10;
         for (int i = 0; i < n; i++) {
-            int y = rnd.nextInt(brightnessMatrix.length), x = rnd.nextInt(brightnessMatrix[0].length);
+            int x = rnd.nextInt(brightnessMatrix.length), y = rnd.nextInt(brightnessMatrix[0].length);
             points.add(new Point(x, y));
         }
     }
@@ -65,12 +70,16 @@ public class Solve {
      */
     public int getEvaluation(){
         int coverage = 0;
+
+        boolean [][] used = new boolean[brightnessMatrix.length][brightnessMatrix[0].length];
+
         for (Point point : points) {
-            int x = point.getX(), y = point.getY();
+            int x = point.x, y = point.y;
             for (int i = Math.max(0, x - 50); i < Math.min(brightnessMatrix.length, x + 51); i++) {
                 for (int j = Math.max(0, y - 50); j < Math.min(brightnessMatrix[0].length, y + 51); j++) {
-                    if (isInside(point, new Point(i, j))){
+                    if (!used[i][j] && isInside(point, new Point(i, j))){
                         coverage += brightnessMatrix[i][j];
+                        used[i][j] = true;
                     }
                 }
             }
@@ -83,7 +92,87 @@ public class Solve {
         return RADIUS >= a.getInstance(b);
     }
 
-    public ArrayList<Point> getPoints() {
+    public List<Point> getPoints() {
         return points;
     }
+    public int getPointsArraySize(){
+        return points.size();
+    }
+
+    public static Solve getBest(Solve a, Solve b){
+        if (a.getEvaluation() > b.getEvaluation()) {
+            return a;
+        }
+        else {
+            return b;
+        }
+    }
+
+    public Solve mergeSolve(Solve b) {
+        Solve newSolve = simpleMerge(b);
+        return simpleMutation(newSolve);
+    }
+
+    private Solve simpleMerge(Solve b) {
+        Random rnd = new Random();
+        int n = rnd.nextBoolean() ? getPointsArraySize() : b.getPointsArraySize();
+        ArrayList <Point> mergedList = new ArrayList<>(getPoints());
+        mergedList.addAll(b.getPoints());
+
+        Collections.shuffle(mergedList);
+
+        HashSet<Point> hashSet = new HashSet<>(mergedList);
+
+        mergedList = new ArrayList<>(hashSet);
+
+        return new Solve(mergedList.subList(0, n));
+
+    }
+
+    private Solve simpleMutation(Solve newSolve) {
+        return deleteTower(newSolve);
+//        if (newSolve.points.size() > 4) return deleteTower(newSolve);
+//        return newSolve;
+    }
+
+    private Solve deleteTower(Solve a) {
+        ArrayList <Point> shallWeDeleteThis = new ArrayList<>();
+
+        int height = brightnessMatrix.length, width = brightnessMatrix[0].length;
+        boolean [][] used = new boolean[height][width];
+
+        for (Point point : a.points) {
+            int coverage = 0;
+            int x = point.x, y = point.y;
+            for (int i = Math.max(0, x - 50); i < Math.min(brightnessMatrix.length, x + 51); i++) {
+                for (int j = Math.max(0, y - 50); j < Math.min(brightnessMatrix[0].length, y + 51); j++) {
+                    if (!used[i][j] && isInside(point, new Point(i, j))){
+                        coverage += brightnessMatrix[i][j];
+                        used[i][j] = true;
+                    }
+                }
+            }
+            if (coverage * 10 - TOWER_PRICE < 0) {
+                shallWeDeleteThis.add(point);
+            }
+        }
+
+
+
+        for (Point point : shallWeDeleteThis) {
+            a.points.remove(point);
+        }
+        return a;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder stringResponse = new StringBuilder("String {\n");
+        for (Point point : points) {
+            stringResponse.append(point.x).append(" ").append(point.y).append("\n");
+        }
+        stringResponse.append("}");
+        return stringResponse.toString();
+    }
+
 }

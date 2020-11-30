@@ -1,15 +1,15 @@
+import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import javax.imageio.ImageIO;
 
 
 public class ImgWorker {
     private BufferedImage image;
     private String outputName;
     private int status, height, width;
-    private int [][] brightness;
+    protected static int [][] brightness;
     /**
      *
      * @param inputName принимает название изображения с картой
@@ -81,7 +81,7 @@ public class ImgWorker {
         g.setColor(Color.RED);
         g.setStroke(new BasicStroke(1));
         for (Solve.Point point : solve.getPoints()) {
-            g.drawOval(point.getX() - 50, point.getY() - 50, 100, 100);
+            g.drawOval(point.getY() - 50, point.getX() - 50, 100, 100);
         }
 
 
@@ -94,4 +94,5 @@ public class ImgWorker {
             System.out.println("Не удалось сохранить изображение");
         }
     }
+
 }

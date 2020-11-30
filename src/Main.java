@@ -1,24 +1,31 @@
 import java.util.Scanner;
 
 public class Main {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
         Scanner in = new Scanner(System.in);
         System.out.println("START");
 
         ImgWorker img = new ImgWorker("Method_tester.png", "save_tester.png");
 
-        System.out.println("Введите время работы программы - ");
-//        long t = in.nextLong();
+        System.out.print("Введите время работы программы - ");
+        long t = 10;//in.nextLong();
 
-        Finder finder = new Finder(10, img.getBrigthnesTable());
+        System.out.println("Введите количество потоков - ");
+        int threadsCnt = 4;//in.nextInt();
 
-        finder.startSearch();
+        /*
+        Solve a = new Solve(img.getBrigthnesTable());
+        a.generateSolve();
+        img.saveImage(a);
+        */
 
-//        Solve solve = new Solve(img.getBrigthnesTable());
-//
-//        solve.generateSolve();
-//
-//        img.saveImage(solve);
+        Finder finder = new Finder(t, img.getBrigthnesTable(), threadsCnt);
+
+        Solve ans = finder.startSearch();
+
+        System.out.println(ans.getPointsArraySize());
+
+        img.saveImage(ans);
 
     }
 }
