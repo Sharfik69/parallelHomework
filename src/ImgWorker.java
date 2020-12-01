@@ -80,7 +80,7 @@ public class ImgWorker {
         Graphics2D g = (Graphics2D) image.getGraphics();
         g.setColor(Color.RED);
         g.setStroke(new BasicStroke(1));
-        for (Solve.Point point : solve.getPoints()) {
+        for (Point point : solve.getPoints()) {
             g.drawOval(point.getY() - 50, point.getX() - 50, 100, 100);
         }
 

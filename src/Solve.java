@@ -1,31 +1,14 @@
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Solve {
 
     private ArrayList <Point> points;
     private int [][] brightnessMatrix;
     private int [][] prefixMatrix;
-    private static final int RADIUS = 50, TOWER_PRICE = 5000000;
+    static final int RADIUS = 50, TOWER_PRICE = 5000000;
+    static ConcurrentHashMap <Point, Boolean> usedPoint;
 
-    class Point {
-        private int x, y;
-        Point (int x, int y) {
-            this.x = x;
-            this.y = y;
-        }
-        public int getX() {
-            return x;
-        }
-
-        public int getY() {
-            return y;
-        }
-
-        public double getInstance(Point a) {
-            return Math.sqrt((a.x - this.x) * (a.x - this.x) + (a.y - this.y) * (a.y - this.y));
-        }
-
-    }
 
     /**
      *
@@ -74,23 +57,13 @@ public class Solve {
         boolean [][] used = new boolean[brightnessMatrix.length][brightnessMatrix[0].length];
 
         for (Point point : points) {
-            int x = point.x, y = point.y;
-            for (int i = Math.max(0, x - 50); i < Math.min(brightnessMatrix.length, x + 51); i++) {
-                for (int j = Math.max(0, y - 50); j < Math.min(brightnessMatrix[0].length, y + 51); j++) {
-                    if (!used[i][j] && isInside(point, new Point(i, j))){
-                        coverage += brightnessMatrix[i][j];
-                        used[i][j] = true;
-                    }
-                }
-            }
+            coverage += detourMatrix(point, used);
         }
 
         return coverage * 10 - TOWER_PRICE * points.size();
     }
 
-    private boolean isInside(Point a, Point b) {
-        return RADIUS >= a.getInstance(b);
-    }
+
 
     public List<Point> getPoints() {
         return points;
@@ -108,7 +81,7 @@ public class Solve {
         }
     }
 
-    public Solve mergeSolve(Solve b) {
+    public Solve mergeSolve(Solve b) throws InterruptedException {
         Solve newSolve = simpleMerge(b);
         return simpleMutation(newSolve);
     }
@@ -125,12 +98,13 @@ public class Solve {
 
         mergedList = new ArrayList<>(hashSet);
 
+//        return new Solve(mergedList);
         return new Solve(mergedList.subList(0, n));
 
     }
 
-    private Solve simpleMutation(Solve newSolve) {
-        return deleteTower(newSolve);
+    private Solve simpleMutation(Solve newSolve) throws InterruptedException {
+        return addTower(deleteTower(newSolve));
 //        if (newSolve.points.size() > 4) return deleteTower(newSolve);
 //        return newSolve;
     }
@@ -141,27 +115,67 @@ public class Solve {
         int height = brightnessMatrix.length, width = brightnessMatrix[0].length;
         boolean [][] used = new boolean[height][width];
 
+        Point worstPoint = null;
+        int coverageForWorstPoint = Integer.MAX_VALUE;
+
         for (Point point : a.points) {
-            int coverage = 0;
-            int x = point.x, y = point.y;
-            for (int i = Math.max(0, x - 50); i < Math.min(brightnessMatrix.length, x + 51); i++) {
-                for (int j = Math.max(0, y - 50); j < Math.min(brightnessMatrix[0].length, y + 51); j++) {
-                    if (!used[i][j] && isInside(point, new Point(i, j))){
-                        coverage += brightnessMatrix[i][j];
-                        used[i][j] = true;
-                    }
-                }
-            }
+            int coverage = detourMatrix(point, used);
             if (coverage * 10 - TOWER_PRICE < 0) {
                 shallWeDeleteThis.add(point);
             }
+
+            if (coverage < coverageForWorstPoint) {
+                worstPoint = point;
+                coverageForWorstPoint = coverage;
+            }
         }
-
-
 
         for (Point point : shallWeDeleteThis) {
             a.points.remove(point);
         }
+
+        if (shallWeDeleteThis.size() > 0 && worstPoint != null) {
+            try {
+                a.points.remove(worstPoint);
+            }
+            catch (Exception ignored) {}
+        }
+
+        return a;
+    }
+
+    private Solve addTower(Solve a) throws InterruptedException {
+        int height = a.brightnessMatrix.length, width = a.brightnessMatrix[0].length;
+        boolean [][] used = new boolean[height][width];
+
+        for (Point point : a.points) {
+            detourMatrix(point, used);
+        }
+
+        usedPoint = new ConcurrentHashMap <>();
+
+        int threadsCount = 5;
+
+        FindTower [] findTowers = new FindTower[threadsCount];
+
+        for (int i = 0; i < threadsCount; i++) {
+            findTowers[i] = new FindTower(used, 100);
+            findTowers[i].start();
+        }
+        for (int i = 0; i < threadsCount; i++) {
+            findTowers[i].join();
+        }
+        int bestCoverage = 0;
+        Point newPoint = null;
+        for (int i = 0; i < threadsCount; i++) {
+            if (findTowers[i].getBestCoverage() > bestCoverage) {
+                bestCoverage = findTowers[i].getBestCoverage();
+                newPoint = findTowers[i].getBestPoint();
+            }
+        }
+        if (newPoint != null)
+            a.points.add(newPoint);
+
         return a;
     }
 
@@ -169,10 +183,25 @@ public class Solve {
     public String toString() {
         StringBuilder stringResponse = new StringBuilder("String {\n");
         for (Point point : points) {
-            stringResponse.append(point.x).append(" ").append(point.y).append("\n");
+            stringResponse.append(point.getX()).append(" ").append(point.getY()).append("\n");
         }
         stringResponse.append("}");
         return stringResponse.toString();
     }
 
+    private int detourMatrix(Point point, boolean [][] used) {
+        int coverage = 0;
+        int x = point.getX(), y = point.getY();
+        for (int i = Math.max(0, x - 50); i < Math.min(brightnessMatrix.length, x + 51); i++) {
+            for (int j = Math.max(0, y - 50); j < Math.min(brightnessMatrix[0].length, y + 51); j++) {
+                if (!used[i][j] && Point.isInside(point, new Point(i, j))){
+                    coverage += brightnessMatrix[i][j];
+                    used[i][j] = true;
+                }
+            }
+        }
+
+        return coverage;
+
+    }
 }

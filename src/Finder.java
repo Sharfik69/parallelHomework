@@ -44,6 +44,30 @@ public class Finder {
                  threads[i].join();
              }
 
+             Solve bestSolution = null;
+             int bestCoverage = 0;
+             for (Solve solve : oldGeneration) {
+                 int sum = solve.getEvaluation();
+                 if (sum > bestCoverage) {
+                     bestCoverage = sum;
+                     bestSolution = solve;
+                 }
+             }
+
+            Solve worstSolution = null;
+            int worstCoverage = Integer.MAX_VALUE;
+            for (Solve solve : newGeneration) {
+                int sum = solve.getEvaluation();
+                if (sum < worstCoverage) {
+                    worstCoverage = sum;
+                    worstSolution = solve;
+                }
+            }
+
+            if (bestSolution != null && worstSolution != null) {
+                newGeneration.remove(worstSolution);
+                newGeneration.add(bestSolution);
+            }
             oldGeneration = newGeneration;
         }
         int evaluation = Integer.MIN_VALUE;
@@ -55,6 +79,7 @@ public class Finder {
                 evaluation = evLoc;
             }
         }
+
         System.out.println("Мы нашли итоговое решение");
 
         return ans;
@@ -85,7 +110,12 @@ class geneticSolve extends Thread {
             Solve mother = Solve.getBest(Finder.oldGeneration.get(ids.get(0)), Finder.oldGeneration.get(ids.get(2)));
             Solve father = Solve.getBest(Finder.oldGeneration.get(ids.get(1)), Finder.oldGeneration.get(ids.get(3)));
 
-            Solve newSolve = mother.mergeSolve(father);
+            Solve newSolve = null;
+            try {
+                newSolve = mother.mergeSolve(father);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             Finder.newGeneration.add(newSolve);
         }
     }

@@ -5,19 +5,13 @@ public class Main {
         Scanner in = new Scanner(System.in);
         System.out.println("START");
 
-        ImgWorker img = new ImgWorker("Method_tester.png", "save_tester.png");
+        ImgWorker img = new ImgWorker("test7.png", "save_tester.png");
 
         System.out.print("Введите время работы программы - ");
-        long t = 10;//in.nextLong();
+        long t = 60;//in.nextLong();
 
         System.out.println("Введите количество потоков - ");
         int threadsCnt = 4;//in.nextInt();
-
-        /*
-        Solve a = new Solve(img.getBrigthnesTable());
-        a.generateSolve();
-        img.saveImage(a);
-        */
 
         Finder finder = new Finder(t, img.getBrigthnesTable(), threadsCnt);
 
