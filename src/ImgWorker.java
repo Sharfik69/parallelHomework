@@ -17,7 +17,7 @@ public class ImgWorker {
      */
     ImgWorker(String inputName, String outputName) {
         try {
-            this.image = ImageIO.read(new File("img/" + inputName));
+            this.image = ImageIO.read(new File("../img/" + inputName));
             this.outputName = outputName;
             height = image.getHeight();
             width = image.getWidth();
@@ -75,14 +75,14 @@ public class ImgWorker {
 
         Graphics2D g = (Graphics2D) image.getGraphics();
         g.setColor(Color.RED);
-        g.setStroke(new BasicStroke(1));
+        g.setStroke(new BasicStroke(3));
         for (Point point : solve.getPoints()) {
             g.drawOval(point.getY() - 50, point.getX() - 50, 100, 100);
         }
 
 
         try {
-            File outputFile = new File("img/" + outputName);
+            File outputFile = new File("../img/" + outputName);
             ImageIO.write(image, "png", outputFile);
             System.out.println("Изображение было сохранено");
             System.out.println("Было сгенерировано " + solve.getPointsArraySize() + " вышек");
