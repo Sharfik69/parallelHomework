@@ -3,15 +3,13 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class Solve {
 
-    private ArrayList <Point> points;
-    private int [][] brightnessMatrix;
-    private int [][] prefixMatrix;
     static final int RADIUS = 50, TOWER_PRICE = 5000000;
-    static ConcurrentHashMap <Point, Boolean> usedPoint;
+    static ConcurrentHashMap<Point, Boolean> usedPoint;
+    private ArrayList<Point> points;
+    private int[][] brightnessMatrix;
 
 
     /**
-     *
      * @param brightnessMatrix матрица яркости
      */
     Solve(int[][] brightnessMatrix) {
@@ -19,16 +17,24 @@ public class Solve {
         this.brightnessMatrix = brightnessMatrix;
     }
 
-    Solve (List <Point> points) {
+    Solve(List<Point> points) {
         this.points = new ArrayList<>();
         this.points.addAll(points);
         this.brightnessMatrix = ImgWorker.brightness;
     }
 
+    public static Solve getBest(Solve a, Solve b) {
+        if (a.getEvaluation() > b.getEvaluation()) {
+            return a;
+        } else {
+            return b;
+        }
+    }
+
     /**
      * Генерирует случайное покрытие точек
      */
-    public void generateSolve(){
+    public void generateSolve() {
         Random rnd = new Random();
         int n = rnd.nextInt(35) + 10;
         for (int i = 0; i < n; i++) {
@@ -37,24 +43,13 @@ public class Solve {
         }
     }
 
-    public void generateSmartSolve() {
-        prefixMatrix = new int[brightnessMatrix.length + 1][brightnessMatrix[0].length + 1];
-        //TODO: Сделать умное рандомное решение через матрицу сумм
-        for (int i = 0; i < brightnessMatrix.length; i++) {
-            for (int j = 0 ; j < brightnessMatrix[0].length; j++) {
-
-            }
-        }
-    }
-
     /**
-     *
      * @return возвращает прибыль компании, после установки данного набора точек
      */
-    public int getEvaluation(){
+    public int getEvaluation() {
         int coverage = 0;
 
-        boolean [][] used = new boolean[brightnessMatrix.length][brightnessMatrix[0].length];
+        boolean[][] used = new boolean[brightnessMatrix.length][brightnessMatrix[0].length];
 
         for (Point point : points) {
             coverage += detourMatrix(point, used);
@@ -63,22 +58,12 @@ public class Solve {
         return coverage * 10 - TOWER_PRICE * points.size();
     }
 
-
-
     public List<Point> getPoints() {
         return points;
     }
-    public int getPointsArraySize(){
-        return points.size();
-    }
 
-    public static Solve getBest(Solve a, Solve b){
-        if (a.getEvaluation() > b.getEvaluation()) {
-            return a;
-        }
-        else {
-            return b;
-        }
+    public int getPointsArraySize() {
+        return points.size();
     }
 
     public Solve mergeSolve(Solve b) throws InterruptedException {
@@ -89,7 +74,7 @@ public class Solve {
     private Solve simpleMerge(Solve b) {
         Random rnd = new Random();
         int n = rnd.nextBoolean() ? getPointsArraySize() : b.getPointsArraySize();
-        ArrayList <Point> mergedList = new ArrayList<>(getPoints());
+        ArrayList<Point> mergedList = new ArrayList<>(getPoints());
         mergedList.addAll(b.getPoints());
 
         Collections.shuffle(mergedList);
@@ -110,10 +95,10 @@ public class Solve {
     }
 
     private Solve deleteTower(Solve a) {
-        ArrayList <Point> shallWeDeleteThis = new ArrayList<>();
+        ArrayList<Point> shallWeDeleteThis = new ArrayList<>();
 
         int height = brightnessMatrix.length, width = brightnessMatrix[0].length;
-        boolean [][] used = new boolean[height][width];
+        boolean[][] used = new boolean[height][width];
 
         Point worstPoint = null;
         int coverageForWorstPoint = Integer.MAX_VALUE;
@@ -134,11 +119,11 @@ public class Solve {
             a.points.remove(point);
         }
 
-        if (shallWeDeleteThis.size() > 0 && worstPoint != null) {
+        if (shallWeDeleteThis.size() == 0 && worstPoint != null) {
             try {
                 a.points.remove(worstPoint);
+            } catch (Exception ignored) {
             }
-            catch (Exception ignored) {}
         }
 
         return a;
@@ -146,17 +131,17 @@ public class Solve {
 
     private Solve addTower(Solve a) throws InterruptedException {
         int height = a.brightnessMatrix.length, width = a.brightnessMatrix[0].length;
-        boolean [][] used = new boolean[height][width];
+        boolean[][] used = new boolean[height][width];
 
         for (Point point : a.points) {
             detourMatrix(point, used);
         }
 
-        usedPoint = new ConcurrentHashMap <>();
+        usedPoint = new ConcurrentHashMap<>();
 
         int threadsCount = 5;
 
-        FindTower [] findTowers = new FindTower[threadsCount];
+        FindTower[] findTowers = new FindTower[threadsCount];
 
         for (int i = 0; i < threadsCount; i++) {
             findTowers[i] = new FindTower(used, 100);
@@ -189,12 +174,12 @@ public class Solve {
         return stringResponse.toString();
     }
 
-    private int detourMatrix(Point point, boolean [][] used) {
+    private int detourMatrix(Point point, boolean[][] used) {
         int coverage = 0;
         int x = point.getX(), y = point.getY();
         for (int i = Math.max(0, x - 50); i < Math.min(brightnessMatrix.length, x + 51); i++) {
             for (int j = Math.max(0, y - 50); j < Math.min(brightnessMatrix[0].length, y + 51); j++) {
-                if (!used[i][j] && Point.isInside(point, new Point(i, j))){
+                if (!used[i][j] && Point.isInside(point, new Point(i, j))) {
                     coverage += brightnessMatrix[i][j];
                     used[i][j] = true;
                 }

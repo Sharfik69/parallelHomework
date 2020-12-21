@@ -4,55 +4,53 @@ import java.util.List;
 import java.util.Random;
 
 public class Finder {
-    private long endTime;
-    private int threadsCnt;
     static protected List<Solve> oldGeneration;
     static protected List<Solve> newGeneration;
-    private int [][] brightnessMatrix;
+    boolean first = false;
+    private long endTime;
+    private int threadsCnt;
+    private int[][] brightnessMatrix;
 
-    Finder (long timeInSec, int [][] brightnessMatrix, int threadsCnt){
+    Finder(long timeInSec, int[][] brightnessMatrix, int threadsCnt) {
         this.endTime = System.currentTimeMillis() + timeInSec * 1000;
         oldGeneration = null;
         this.brightnessMatrix = brightnessMatrix;
         this.threadsCnt = threadsCnt;
     }
 
-    boolean first = false;
     public Solve startSearch() throws InterruptedException {
-        while(System.currentTimeMillis() < endTime) {
+        while (System.currentTimeMillis() < endTime) {
             if (!first) {
                 oldGeneration = Collections.synchronizedList(new ArrayList<>());
-                System.out.println("Я генерирую решения");
                 for (int i = 0; i < 100; i++) {
                     Solve anotherSolve = new Solve(brightnessMatrix);
                     anotherSolve.generateSolve();
                     oldGeneration.add(anotherSolve);
                 }
-                System.out.println("Я сделляль");
                 first = true;
             }
 
-             newGeneration = Collections.synchronizedList(new ArrayList<>());
+            newGeneration = Collections.synchronizedList(new ArrayList<>());
 
-             geneticSolve [] threads = new geneticSolve[threadsCnt];
+            geneticSolve[] threads = new geneticSolve[threadsCnt];
 
-             for (int i = 0; i < threadsCnt; i++) {
-                 threads[i] = new geneticSolve(100 / threadsCnt + (i == threadsCnt - 1 ? 100 % threadsCnt : 0));
-                 threads[i].start();
-             }
-             for (int i = 0; i < threadsCnt; i++) {
-                 threads[i].join();
-             }
+            for (int i = 0; i < threadsCnt; i++) {
+                threads[i] = new geneticSolve(100 / threadsCnt + (i == threadsCnt - 1 ? 100 % threadsCnt : 0));
+                threads[i].start();
+            }
+            for (int i = 0; i < threadsCnt; i++) {
+                threads[i].join();
+            }
 
-             Solve bestSolution = null;
-             int bestCoverage = 0;
-             for (Solve solve : oldGeneration) {
-                 int sum = solve.getEvaluation();
-                 if (sum > bestCoverage) {
-                     bestCoverage = sum;
-                     bestSolution = solve;
-                 }
-             }
+            Solve bestSolution = null;
+            int bestCoverage = 0;
+            for (Solve solve : oldGeneration) {
+                int sum = solve.getEvaluation();
+                if (sum > bestCoverage) {
+                    bestCoverage = sum;
+                    bestSolution = solve;
+                }
+            }
 
             Solve worstSolution = null;
             int worstCoverage = Integer.MAX_VALUE;
@@ -80,7 +78,7 @@ public class Finder {
             }
         }
 
-        System.out.println("Мы нашли итоговое решение");
+        System.out.println("Итоговое решение было найдено");
 
         return ans;
     }
@@ -92,11 +90,12 @@ class geneticSolve extends Thread {
     //Тут будут браться два решения и скрещиваться только после того как нам скажет препод что нужно делать
     int cnt;
     Random rnd = new Random();
+
     geneticSolve(int cnt) {
         this.cnt = cnt;
     }
 
-    public void run(){
+    public void run() {
         for (int i = 0; i < cnt; i++) {
             ArrayList<Integer> ids = new ArrayList<>();
             int k;
